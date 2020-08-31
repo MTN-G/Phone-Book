@@ -12,7 +12,10 @@
     "type": "git",
     "url": "git+https://github.com/MTN-G/Phone-Book.git"
   },
-  "keywords": [],
+  "keywords": [
+    "example",
+    "heroku"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
