@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-const baseUrl = 'http://localhost:3001/api/persons'
+const baseUrl = '/api/persons'
 
 function App() {
   const [book, setBook] = useState([]);
@@ -17,7 +17,7 @@ function App() {
   }, [])
 
   const handleDelete = (e) => {
-    axios.delete(`${baseUrl}${e.target.id}`)
+    axios.delete(`${baseUrl}/${e.target.id}`)
     fetch();
   }
 
