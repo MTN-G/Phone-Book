@@ -16,7 +16,7 @@ function App() {
     fetch();
   }, [])
 
-  const handleDelete = (e) => {
+  const handleDelete = async (e) => {
     console.log(e.target.id)
     await axios.delete(`${baseUrl}/${e.target.id}`)
     fetch();
