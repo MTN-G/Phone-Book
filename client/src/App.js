@@ -18,7 +18,7 @@ function App() {
 
   const handleDelete = (e) => {
     console.log(e.target.id)
-    axios.delete(`${baseUrl}/${e.target.id}`)
+    await axios.delete(`${baseUrl}/${e.target.id}`)
     fetch();
   }
 
