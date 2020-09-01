@@ -17,11 +17,18 @@ function App() {
   }, [])
 
   const handleDelete = (e) => {
+    console.log(e.target.id)
     axios.delete(`${baseUrl}/${e.target.id}`)
     fetch();
   }
 
   const handleSubmit = async () => {
+    const toUpdate = book.find(obj => obj.name === name);
+    (toUpdate) ?
+    await axios.put(`${baseUrl}/${toUpdate.id}`,{
+      name,
+      number
+    }) :
     await axios.post(baseUrl, {
       name, 
       number

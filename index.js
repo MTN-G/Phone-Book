@@ -1,94 +1,100 @@
+require('dotenv').config()
 const express = require('express')
 const app = express();
-const morgan = require('morgan')
-const cors = require('cors')
+const Person = require('./models/person')
+
+const morgan = require('morgan');
 
 app.use(express.json());
 app.use(morgan('dev'))
-app.use(cors())
 app.use(express.static('build'))
 
-let persons = [
-    {
-        name: "Ilay Baruch",
-        number: "054-5363678",
-        id: 1
-      },
-      {
-        name: "Stav Zamir",
-        number: "054-4747207",
-        id: 2
-      },
-      {
-        name: "Omer Nir",
-        number: "054-6256258",
-        id: 3
-      },
-      {
-        name: "Ido Nochi",
-        number: "052-8328328",
-        id: 4
+app.get('/api/persons', (request, response) => {
+  Person.find({}).then(persons => {
+    response.json(persons)
+  })
+})
+
+app.post('/api/persons', (request, response) => {
+  const body = request.body
+
+  if (body.name === undefined) {
+    return response.status(400).json({ error: 'content missing' })
+  }
+
+  const person = new Person({
+    name: body.name,
+    number: body.number
+  })
+
+  person.save().then(savedPerson => {
+    response.json(savedPerson)
+  })
+})
+
+// app.delete('/api/persons/:id', (request, response) => {
+//     const id = request.params.id;
+//     const person = Person.findById(id)
+//     person.deleteOne().then(() => {
+//       response.json('deleted')
+//     })
+// })
+
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+})
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then(updatedNote => {
+      response.json(updatedNote)
+    })
+    .catch(error => next(error))
+})
+
+
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then(person => {
+      if (person) {
+        response.json(person)
+      } else {
+        response.status(404).end()
       }
-]
-
-app.get('/', (req, res) => {
-  res.send(`<h1>Hello</h1>`)
+    })
+    .catch(error => {next(error)})
 })
 
-app.get('/api/persons', (req, res) => {
-  res.json(persons)
-})
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
 
-app.get('/info', (req, res) => {
-    const personsAmount = persons.length;
-    res.send(
-        `<div>PhoneBook has info for ${personsAmount} persons</div>
-         <div>${new Date}</div>`)
-})
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
 
-app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
-    if (person) {
-        res.json(person)
-    } else {
-        res.status(404).end()
-    }
-})
+  next(error)
+}
 
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(person => person.id !== id)
+app.use(errorHandler)
 
-    res.status(204).end()
-})
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
 
-app.post('/api/persons', (req, res) => {
-    const body = req.body
+app.use(unknownEndpoint)
 
-    if (!body.name || !body.number) {
-      return res.status(400).json({ 
-        error: 'name or number missing' 
-      })
-    } 
-    else if (persons.some(person => person.name === body.name)) {
-      return res.status(400).json({ 
-        error: 'name must be unique'
-      })
-    }
-
-    const newPerson = {
-        name: body.name,
-        number: body.number,
-        id: persons[persons.length - 1].id + 1
-    }
-
-    persons.push(newPerson);
-    res.json(persons);
-})
-
-
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
